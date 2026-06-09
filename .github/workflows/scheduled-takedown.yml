@@ -1,0 +1,39 @@
+name: scheduled-takedown
+# One-shot: at the scheduled time, take the public game link offline by
+# disabling GitHub Pages. Runs on GitHub's servers, so it works even if
+# Kevin's computer is off/asleep. Disables itself after the first run.
+# Reversible: re-enable Pages anytime to bring the link back.
+on:
+  schedule:
+    - cron: "59 19 * * *"   # 19:59 UTC == 12:59 PDT (3 hours after it was set on 2026-06-09)
+  workflow_dispatch: {}      # allows a manual "run now" from the Actions tab
+permissions:
+  contents: write
+  pages: write
+  actions: write
+jobs:
+  takedown:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Take Mission Mike offline
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set +e
+          echo "Disabling GitHub Pages for ${{ github.repository }} ..."
+          gh api --method DELETE "repos/${{ github.repository }}/pages"
+          PG=$?
+          echo "pages delete exit: $PG"
+          if [ "$PG" -ne 0 ]; then
+            echo "Pages API failed; removing index.html as a fallback so the URL 404s"
+            git config user.name "mission-mike-bot"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git rm -f index.html
+            git commit -m "Mission Mike: scheduled takedown (link disabled)"
+            git push
+          fi
+          echo "Disabling this workflow so it only runs once..."
+          gh api --method PUT "repos/${{ github.repository }}/actions/workflows/scheduled-takedown.yml/disable" || true
+          echo "done"
