@@ -5,7 +5,7 @@ name: scheduled-takedown
 # Reversible: re-enable Pages anytime to bring the link back.
 on:
   schedule:
-    - cron: "59 19 * * *"   # 19:59 UTC == 12:59 PDT (3 hours after it was set on 2026-06-09)
+    - cron: "5 18 * * *"   # 18:05 UTC == 11:05 PDT (1 hour from when reset on 2026-06-09)
   workflow_dispatch: {}      # allows a manual "run now" from the Actions tab
 permissions:
   contents: write
